@@ -1,101 +1,220 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { TextGenerateEffect } from "../components/ui/text-generate-effect";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [inputValue, setInputValue] = useState<string>("");
+  const [reportUrls, setReportUrls] = useState<{
+    speed: string | null;
+    seo: string | null;
+    fullSeo: string | null;
+    xlsxReportUrl: string | null;
+  }>({
+    speed: null,
+    seo: null,
+    fullSeo: null,
+    xlsxReportUrl: null,
+  });
+  const words = `Your website's SEO performance has been evaluated, and we recommend focusing on optimizing keywords, improving page speed, and enhancing mobile responsiveness to boost rankings and drive more organic traffic.
+`;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [loading, setLoading] = useState<boolean>(false);
+  const [selectedTab, setSelectedTab] = useState<string>("speed"); // Default tab
+
+  // Handle the input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  // Function to generate the SEO report by calling the API route
+  const generateSeoReport = async () => {
+    if (!inputValue) {
+      alert("Please enter a valid URL.");
+      return;
+    }
+
+    setLoading(true); // Start loading
+
+    try {
+      // Send a POST request to the API route in Next.js
+      const response = await fetch("/api/generate-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: inputValue }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReportUrls({
+          speed: data.speedReportUrl || null,
+          seo: data.seoReportUrl || null,
+          fullSeo: data.fullSeoReportUrl || null,
+          xlsxReportUrl: data.xlsxReportUrl || null,
+        });
+      } else {
+        alert("Error generating the report. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error generating the report. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
+    }
+  };
+
+  // Handle tab selection
+  const handleTabClick = (tab: string) => {
+    setSelectedTab(tab);
+  };
+
+  return (
+    <div className="text-black p-6">
+      <h1 className="text-2xl text-center font-bold mb-6">Seo & Page speed</h1>
+      <div className="space-y-4">
+        {/* Input and Label */}
+        <div className="flex justify-center items-center flex-col">
+          <input
+            id="seo-input"
+            type="text"
+            className=" shadow-lg border border-gray-200 p-2 rounded-md w-1/2"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="e.g. https://example.com"
+            disabled={loading}
+          />
+
+          <div className="flex justify-end w-1/2">
+            <button
+              onClick={generateSeoReport}
+              className="bg-blue-500 text-white p-2 rounded-md mt-2 hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              disabled={loading} // Disable button when loading
+            >
+              {loading ? (
+                // Round loader icon while loading
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      strokeWidth="4"
+                      className="opacity-25"
+                    />
+                    <path
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="4"
+                      d="M4 12a8 8 0 0116 0"
+                      className="opacity-75"
+                    />
+                  </svg>
+                  <p>Generating...</p>
+                </>
+              ) : (
+                "Generate the Report"
+              )}
+            </button>
+          </div>
+          <div className="w-1/2">
+            {loading && (
+              <TextGenerateEffect words={words} className="text-sm" />
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {/* Button to generate the report */}
+        {/* Display the tabs */}
+        {reportUrls.speed && reportUrls.seo && reportUrls.fullSeo && (
+          <div className="mt-6">
+            <div className="flex space-x-4 mb-4">
+              <button
+                className={`p-2 rounded-md ${
+                  selectedTab === "speed"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => handleTabClick("speed")}
+              >
+                Speed Report
+              </button>
+              <button
+                className={`p-2 rounded-md ${
+                  selectedTab === "seo"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => handleTabClick("seo")}
+              >
+                SEO Report
+              </button>
+              {/* <button
+                className={`p-2 rounded-md ${
+                  selectedTab === "fullSeo"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => handleTabClick("fullSeo")}
+              >
+                Full SEO Report
+              </button> */}
+            </div>
+            Display the selected report
+            {selectedTab === "speed" && reportUrls.speed && (
+              <div className="p-4 border-2 border-gray-300 rounded-md">
+                <h2 className="text-xl font-semibold">Speed Report</h2>
+                <iframe
+                  src={reportUrls.speed} // Use the returned URL for Speed report
+                  width="100%"
+                  height="600px"
+                  title="Speed Report"
+                />
+              </div>
+            )}
+            {selectedTab === "seo" && reportUrls.seo && (
+              <div className="p-4 border-2 border-gray-300 rounded-md mt-4">
+                <h2 className="text-xl font-semibold">SEO Report</h2>
+                <iframe
+                  src={reportUrls.seo} // Use the returned URL for SEO report
+                  width="100%"
+                  height="1000px"
+                  title="SEO Report"
+                />
+              </div>
+            )}
+            {/* {selectedTab === "fullSeo" && reportUrls.fullSeo && (
+              <div className="p-4 border-2 border-gray-300 rounded-md mt-4">
+                <h2 className="text-xl font-semibold">Full SEO Report</h2>
+
+                {reportUrls.xlsxReportUrl && (
+                  <div className="mt-4">
+                    <p>
+                      <strong>Download Full SEO Report as XLSX:</strong>{" "}
+                      <a
+                        href={reportUrls.xlsxReportUrl}
+                        target="_blank"
+                        className="text-blue-600 hover:text-blue-800"
+                        download
+                      >
+                        Download XLSX
+                      </a>
+                    </p>
+                  </div>
+                )}
+
+              </div>
+            )} */}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
