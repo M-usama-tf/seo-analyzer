@@ -10,7 +10,7 @@ function sanitizeUrlToFileName(url: string) {
 }
 
 // Handle POST request
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response | undefined> {
   const { url } = await req.json(); // Get the URL from the request body
 
   if (!url) {
@@ -42,112 +42,104 @@ export async function POST(req: Request) {
     }
   }
 
-  return new Promise((resolve, reject) => {
-    // Options to increase maxBuffer limit to 30MB
-    const execOptions = {
-      maxBuffer: 1024 * 1024 * 30, // 30MB buffer size
-    };
+  // Options to increase maxBuffer limit to 30MB
+  const execOptions = {
+    maxBuffer: 1024 * 1024 * 30, // 30MB buffer size
+  };
 
-    // Execute Lighthouse for speed, seo, and full-seo separately
-    exec(
-      `lighthouse ${url} --output-path=${path.join(
-        outputDir,
-        speedReportName,
-      )} --output html  --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
-      execOptions,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error (Speed): ${error}`);
-          return resolve(
-            NextResponse.json(
-              { message: `Error executing Speed Lighthouse: ${error.message}` },
+  // Execute Lighthouse for speed, seo, and full-seo separately
+  exec(
+    `lighthouse ${url} --output-path=${path.join(
+      outputDir,
+      speedReportName,
+    )} --output html  --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+    execOptions,
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error (Speed): ${error}`);
+        return NextResponse.json(
+          { message: `Error executing Speed Lighthouse: ${error.message}` },
+          { status: 500 },
+        );
+      }
+      // Log stdout to check for normal output
+      if (stdout) {
+        console.log(`stdout (Speed): ${stdout}`);
+      }
+
+      // Log stderr and treat warnings or non-critical messages as warnings
+      if (stderr) {
+        console.warn(`stderr (Speed warning): ${stderr}`);
+      }
+
+      // Execute Lighthouse for SEO
+      exec(
+        `lighthouse ${url} --output-path=${path.join(
+          outputDir,
+          seoReportName,
+        )} --output html --only-categories=seo --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+        execOptions,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error (SEO): ${error}`);
+            return NextResponse.json(
+              {
+                message: `Error executing SEO Lighthouse: ${error.message}`,
+              },
               { status: 500 },
-            ),
-          );
-        }
-        // Log stdout to check for normal output
-        if (stdout) {
-          console.log(`stdout (Speed): ${stdout}`);
-        }
+            );
+          }
 
-        // Log stderr and treat warnings or non-critical messages as warnings
-        if (stderr) {
-          console.warn(`stderr (Speed warning): ${stderr}`);
-        }
+          // Log stdout to check for normal output
+          if (stdout) {
+            console.log(`stdout (SEO): ${stdout}`);
+          }
 
-        // Execute Lighthouse for SEO
-        exec(
-          `lighthouse ${url} --output-path=${path.join(
-            outputDir,
-            seoReportName,
-          )} --output html --only-categories=seo --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
-          execOptions,
-          (error, stdout, stderr) => {
-            if (error) {
-              console.error(`exec error (SEO): ${error}`);
-              return resolve(
-                NextResponse.json(
+          // Log stderr and treat warnings or non-critical messages as warnings
+          if (stderr) {
+            console.warn(`stderr (SEO warning): ${stderr}`);
+          }
+
+          // Execute Lighthouse for full SEO (combined categories)
+          exec(
+            `lighthouse ${url} --output-path=${path.join(
+              outputDir,
+              fullSeoReportName,
+            )} --output html --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+            execOptions,
+            (error, stdout, stderr) => {
+              if (error) {
+                console.error(`exec error (Full SEO): ${error}`);
+                return NextResponse.json(
                   {
-                    message: `Error executing SEO Lighthouse: ${error.message}`,
+                    message: `Error executing Full SEO Lighthouse: ${error.message}`,
                   },
                   { status: 500 },
-                ),
-              );
-            }
+                );
+              }
 
-            // Log stdout to check for normal output
-            if (stdout) {
-              console.log(`stdout (SEO): ${stdout}`);
-            }
+              // Log stdout to check for normal output
+              if (stdout) {
+                console.log(`stdout (Full SEO): ${stdout}`);
+              }
 
-            // Log stderr and treat warnings or non-critical messages as warnings
-            if (stderr) {
-              console.warn(`stderr (SEO warning): ${stderr}`);
-            }
+              // Log stderr and treat warnings or non-critical messages as warnings
+              if (stderr) {
+                console.warn(`stderr (Full SEO warning): ${stderr}`);
+              }
 
-            // Execute Lighthouse for full SEO (combined categories)
-            exec(
-              `lighthouse ${url} --output-path=${path.join(
-                outputDir,
-                fullSeoReportName,
-              )} --output html --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
-              execOptions,
-              (error, stdout, stderr) => {
-                if (error) {
-                  console.error(`exec error (Full SEO): ${error}`);
-                  return resolve(
-                    NextResponse.json(
-                      {
-                        message: `Error executing Full SEO Lighthouse: ${error.message}`,
-                      },
-                      { status: 500 },
-                    ),
-                  );
-                }
+              // Return the dynamic report URLs
+              const reportUrls = {
+                speedReportUrl: `/${speedReportName}`,
+                seoReportUrl: `/${seoReportName}`,
+                fullSeoReportUrl: `/${fullSeoReportName}`,
+              };
 
-                // Log stdout to check for normal output
-                if (stdout) {
-                  console.log(`stdout (Full SEO): ${stdout}`);
-                }
-
-                // Log stderr and treat warnings or non-critical messages as warnings
-                if (stderr) {
-                  console.warn(`stderr (Full SEO warning): ${stderr}`);
-                }
-
-                // Return the dynamic report URLs
-                const reportUrls = {
-                  speedReportUrl: `/${speedReportName}`,
-                  seoReportUrl: `/${seoReportName}`,
-                  fullSeoReportUrl: `/${fullSeoReportName}`,
-                };
-
-                return resolve(NextResponse.json(reportUrls, { status: 200 }));
-              },
-            );
-          },
-        );
-      },
-    );
-  });
+              return NextResponse.json(reportUrls, { status: 200 });
+            },
+          );
+        },
+      );
+    },
+  );
 }
