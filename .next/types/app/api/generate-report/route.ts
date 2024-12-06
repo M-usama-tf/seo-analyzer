@@ -1,4 +1,4 @@
-// File: /Users/themacstore/Documents/codes/Techfrontiers/seo/src/app/api/generate-report/route.ts
+// File: /Users/mbp/Desktop/projects tf/seo-analyzer/src/app/api/generate-report/route.ts
 import * as entry from '../../../../../src/app/api/generate-report/route.js'
 import type { NextRequest } from 'next/server.js'
 
