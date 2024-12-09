@@ -5,23 +5,12 @@
   "devFiles": [],
   "ampDevFiles": [],
   "lowPriorityFiles": [
-<<<<<<< Updated upstream
-    "static/p0DitaAQCNmUXokwRdeHh/_buildManifest.js",
-    "static/p0DitaAQCNmUXokwRdeHh/_ssgManifest.js"
-  ],
-  "rootMainFiles": [
-    "static/chunks/webpack-e35b36d3638c2d3c.js",
-    "static/chunks/4bd1b696-db5e62bc1ca48995.js",
-    "static/chunks/517-611eb766ce5172e4.js",
-    "static/chunks/main-app-e5e68fe45f748903.js"
-=======
     "static/development/_buildManifest.js",
     "static/development/_ssgManifest.js"
   ],
   "rootMainFiles": [
     "static/chunks/webpack.js",
     "static/chunks/main-app.js"
->>>>>>> Stashed changes
   ],
   "rootMainFilesTree": {},
   "pages": {
