@@ -69,7 +69,7 @@ export async function POST(req: Request): Promise<Response> {
       `lighthouse ${url} --output-path=${path.join(
         outputDir,
         speedReportName,
-      )} --output html --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+      )} --output html --chrome-flags="--headless --no-sandbox" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
       execOptions,
     );
 
@@ -77,7 +77,7 @@ export async function POST(req: Request): Promise<Response> {
       `lighthouse ${url} --output-path=${path.join(
         outputDir,
         seoReportName,
-      )} --output html --only-categories=seo --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+      )} --output html --only-categories=seo --chrome-flags="--headless --no-sandbox" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
       execOptions,
     );
 
@@ -85,7 +85,7 @@ export async function POST(req: Request): Promise<Response> {
       `lighthouse ${url} --output-path=${path.join(
         outputDir,
         fullSeoReportName,
-      )} --output html --chrome-flags="--headless" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
+      )} --output html --chrome-flags="--headless --no-sandbox" --screenEmulation.disabled --throttling-method=provided --no-emulatedUserAgent`,
       execOptions,
     );
 
